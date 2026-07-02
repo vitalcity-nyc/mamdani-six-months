@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mamdani's first six months: the promise ledger</title>
+<link rel="stylesheet" href="https://use.typekit.net/qqk2vto.css">
+<style>
+/* Vital City tokens */
+:root {
+  --vc-black:#050507;
+  --vc-white:#ffffff;
+  --vc-cloud:#dddddd;
+  --vc-chartreuse:#dde44c;
+  --vc-orange:#ff7c53;
+  --vc-periwinkle:#9b9fbc;
+  --vc-rose:#cea9be;
+  --vc-magenta:#e7466d;
+  --vc-charcoal:#707175;
+  --vc-graphite:#3a3a3d;
+  --vc-indigo:#394882;
+  --vc-cerulean:#217ebe;
+  --vc-green:#57aa4a;
+  --vc-cloud-50:#eeeeee;
+  --vc-paper:#f7f7f4;
+
+  --vc-sans:"halyard-text","Inter","Helvetica Neue",Arial,sans-serif;
+  --vc-serif:"GascogneTS","Source Serif 4",Georgia,"Times New Roman",serif;
+
+  --st-delivered:var(--vc-green);
+  --st-progress:var(--vc-cerulean);
+  --st-scaled:var(--vc-orange);
+  --st-blocked:var(--vc-magenta);
+  --st-none:var(--vc-charcoal);
+}
+
+@font-face {
+  font-family:'GascogneTS';
+  src:url('fonts/GascogneTS-Light.ttf') format('truetype');
+  font-weight:300; font-style:normal; font-display:swap;
+}
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+html,body{background:var(--vc-white);color:var(--vc-black);}
+body{
+  font-family:var(--vc-sans); font-weight:300;
+  line-height:1.5;
+  padding:24px 16px;
+  display:flex; justify-content:center;
+}
+
+.card{
+  width:100%; max-width:880px;
+  background:var(--vc-white);
+  border:1px solid var(--vc-black);
+  overflow:hidden;
+}
+
+/* Embed mode: drop outer chrome so it doesn't double up with the host page's border */
+body.embed{padding:0;}
+body.embed .card{border:none; max-width:none;}
+
+/* Header */
+.head{
+  padding:22px 24px 18px;
+  border-bottom:1px solid var(--vc-cloud);
+  position:relative;
+}
+.head h1{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:1.72rem; line-height:1.12;
+  letter-spacing:-.005em;
+  margin-bottom:8px;
+  padding-right:96px;
+}
+.head .dek{
+  font-family:var(--vc-sans); font-weight:300;
+  font-size:.93rem; line-height:1.5;
+  max-width:68ch;
+}
+.head .dek b{font-weight:700;}
+
+/* Expand button (embed mode only) */
+.expand-btn{
+  position:absolute; top:16px; right:16px;
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.62rem; letter-spacing:.12em; text-transform:uppercase;
+  background:var(--vc-white); color:var(--vc-black);
+  border:1px solid var(--vc-black);
+  padding:6px 10px;
+  cursor:pointer;
+  text-decoration:none;
+  display:none; align-items:center; gap:6px;
+}
+.expand-btn .arr{font-size:.85rem; line-height:1;}
+.expand-btn:hover{background:var(--vc-chartreuse);}
+body.embed .expand-btn{display:inline-flex;}
+
+/* Scoreboard strip */
+.stats{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  background:var(--vc-paper);
+  border-bottom:1px solid var(--vc-cloud);
+}
+.stat{
+  padding:12px 14px 11px;
+  border-right:1px solid var(--vc-cloud);
+  border-top:4px solid transparent;
+}
+.stat:last-child{border-right:none;}
+.stat.delivered{border-top-color:var(--st-delivered);}
+.stat.progress{border-top-color:var(--st-progress);}
+.stat.scaled{border-top-color:var(--st-scaled);}
+.stat.blocked{border-top-color:var(--st-blocked);}
+.stat.none{border-top-color:var(--vc-cloud);}
+.stat .num{
+  font-family:var(--vc-serif); font-weight:300;
+  font-size:1.85rem; line-height:1;
+  margin-bottom:4px;
+}
+.stat .lbl{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.58rem; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--vc-charcoal);
+  line-height:1.35;
+}
+
+/* Section heads */
+.section-head{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.68rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--vc-black);
+  padding:16px 24px 10px;
+  border-bottom:1px solid var(--vc-cloud);
+  background:var(--vc-white);
+}
+.section-head .sub{
+  display:block;
+  font-weight:300; text-transform:none; letter-spacing:0;
+  font-size:.8rem; color:var(--vc-charcoal);
+  margin-top:2px;
+}
+
+/* Promise rows */
+.row{
+  display:grid;
+  grid-template-columns:minmax(0,38%) minmax(0,62%);
+  gap:0 20px;
+  padding:16px 24px 15px 21px;
+  border-bottom:1px solid var(--vc-cloud);
+  border-left:3px solid var(--vc-cloud);
+}
+.row.delivered{border-left-color:var(--st-delivered);}
+.row.progress{border-left-color:var(--st-progress);}
+.row.scaled{border-left-color:var(--st-scaled);}
+.row.blocked{border-left-color:var(--st-blocked);}
+.row.none{border-left-color:var(--vc-cloud);}
+
+.row .cat{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.56rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--vc-charcoal);
+  margin-bottom:3px;
+}
+.row h3{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:1.02rem; line-height:1.2;
+  margin-bottom:5px;
+}
+.row .promise{
+  font-size:.8rem; line-height:1.45;
+  color:var(--vc-graphite);
+}
+.row .promise b{font-weight:700; color:var(--vc-black);}
+
+.row .status-side{min-width:0;}
+.chip{
+  display:inline-block;
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.6rem; letter-spacing:.11em; text-transform:uppercase;
+  color:var(--vc-white);
+  padding:3px 9px 2px;
+  margin-bottom:7px;
+}
+.chip.delivered{background:var(--st-delivered);}
+.chip.progress{background:var(--st-progress);}
+.chip.scaled{background:var(--st-scaled);}
+.chip.blocked{background:var(--st-blocked);}
+.chip.none{
+  background:var(--vc-white); color:var(--vc-charcoal);
+  border:1px dashed var(--vc-charcoal);
+  padding:2px 8px 1px;
+}
+.row .update{
+  font-size:.84rem; line-height:1.5;
+  color:var(--vc-black);
+}
+.row .update b{font-weight:700;}
+.row .needs{
+  font-size:.7rem; line-height:1.45;
+  color:var(--vc-charcoal);
+  margin-top:6px;
+}
+.row .needs b{
+  font-weight:700; font-size:.58rem;
+  letter-spacing:.11em; text-transform:uppercase;
+  margin-right:4px;
+}
+.row a, .beyond a{
+  color:var(--vc-graphite);
+  text-decoration:underline; text-underline-offset:2px;
+  font-size:.92em;
+}
+.row a:hover, .beyond a:hover{color:var(--vc-orange);}
+
+/* Beyond-the-platform section */
+.beyond{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  background:var(--vc-paper);
+}
+.beyond .item{
+  padding:14px 24px 13px;
+  border-bottom:1px solid var(--vc-cloud);
+  border-right:1px solid var(--vc-cloud);
+}
+.beyond .item:nth-child(2n){border-right:none;}
+.beyond .item h4{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.9rem; line-height:1.25;
+  margin-bottom:4px;
+}
+.beyond .item p{
+  font-size:.78rem; line-height:1.5;
+  color:var(--vc-graphite);
+}
+.beyond .item .when{
+  font-family:var(--vc-sans); font-weight:700;
+  font-size:.56rem; letter-spacing:.13em; text-transform:uppercase;
+  color:var(--vc-charcoal);
+  margin-bottom:3px;
+}
+
+/* Methodology + source */
+.source{
+  font-family:var(--vc-sans); font-weight:300;
+  font-size:.7rem; line-height:1.55;
+  color:var(--vc-graphite);
+  padding:14px 24px 12px;
+  border-bottom:1px solid var(--vc-cloud);
+}
+.source b{color:var(--vc-black); font-weight:700; font-size:.6rem; letter-spacing:.14em; text-transform:uppercase; margin-right:6px;}
+.source a{color:var(--vc-graphite); text-decoration:underline;}
+.source a:hover{color:var(--vc-orange);}
+.source details{margin-top:6px;}
+.source summary{
+  cursor:pointer; font-weight:700; font-size:.66rem;
+  letter-spacing:.05em; color:var(--vc-black);
+}
+.source details p{margin:6px 0 0;}
+
+.foot{
+  display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;
+  padding:12px 24px;
+  font-family:var(--vc-sans); font-weight:300;
+  font-size:.78rem;
+  color:var(--vc-graphite);
+}
+
+@media (max-width:680px){
+  body{padding:16px 10px;}
+  .head{padding:18px 18px 14px;}
+  .head h1{font-size:1.38rem; padding-right:84px;}
+  .stats{grid-template-columns:repeat(5,1fr);}
+  .stat{padding:9px 8px 8px;}
+  .stat .num{font-size:1.4rem;}
+  .stat .lbl{font-size:.5rem; letter-spacing:.08em;}
+  .row{grid-template-columns:1fr; gap:8px 0; padding:14px 18px 13px 15px;}
+  .beyond{grid-template-columns:1fr;}
+  .beyond .item{border-right:none; padding:12px 18px 11px;}
+  .source{padding:12px 18px;}
+  .foot{padding:10px 18px; flex-direction:column; align-items:flex-start; gap:8px;}
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <div class="head">
+    <a class="expand-btn" href="./" target="_top" title="Open full-screen view">
+      Expand <span class="arr">&#x2922;</span>
+    </a>
+    <h1>Mamdani's first six months: the promise ledger</h1>
+    <p class="dek">
+      Zohran Mamdani took office as mayor of New York City on Jan. 1, 2026. Six months in, here is where each of his signature campaign promises stands &mdash; what has been delivered, what is moving, what Albany refused and where there has been no visible action &mdash; plus what he has done that he never promised.
+    </p>
+  </div>
+
+  <div class="stats">
+    <div class="stat delivered"><div class="num">2</div><div class="lbl">Delivered</div></div>
+    <div class="stat progress"><div class="num">6</div><div class="lbl">In progress</div></div>
+    <div class="stat scaled"><div class="num">3</div><div class="lbl">Scaled back</div></div>
+    <div class="stat blocked"><div class="num">2</div><div class="lbl">Blocked in Albany</div></div>
+    <div class="stat none"><div class="num">2</div><div class="lbl">No visible action</div></div>
+  </div>
+
+  <div class="section-head">The promises
+    <span class="sub">Fifteen signature commitments from the 2025 campaign, ordered by how far each has gotten.</span>
+  </div>
+
+  <!-- DELIVERED -->
+
+  <div class="row delivered">
+    <div>
+      <div class="cat">Housing</div>
+      <h3>Freeze the rent</h3>
+      <p class="promise"><b>The promise:</b> freeze rents for roughly 1 million rent-stabilized apartments through appointments to the Rent Guidelines Board.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip delivered">Delivered</span>
+      <p class="update">On June 25 the board &mdash; with six of its nine members appointed by Mamdani &mdash; voted 7&ndash;1 to freeze rents on both one- and two-year leases beginning between Oct. 1, 2026 and Sept. 30, 2027, the first two-year freeze in the board's history. One member resigned in protest the day of the vote. <a href="https://gothamist.com/news/nyc-rent-guidelines-board-approves-2-year-rent-freeze-fulfilling-mamdani-campaign-pledge" target="_blank" rel="noopener">Gothamist &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Mayoral appointments alone &mdash; the one big promise fully within City Hall's power.</p>
+    </div>
+  </div>
+
+  <div class="row delivered">
+    <div>
+      <div class="cat">Public safety</div>
+      <h3>Keep Jessica Tisch atop the NYPD</h3>
+      <p class="promise"><b>The promise:</b> retain Jessica Tisch as commissioner of the New York Police Department.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip delivered">Delivered</span>
+      <p class="update">Announced Nov. 19, 2025, before inauguration; Tisch has served as police commissioner through the full six months, with public friction over the canceled plan to hire more officers and over shifting mental-health calls away from police. <a href="https://www.thecity.nyc/2025/11/19/jessica-tisch-zohran-mamdani-nypd-commissioner/" target="_blank" rel="noopener">THE CITY &#8599;</a></p>
+      <p class="needs"><b>Needed</b> A mayoral appointment &mdash; and Tisch's agreement to stay.</p>
+    </div>
+  </div>
+
+  <!-- IN PROGRESS -->
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Childcare</div>
+      <h3>Universal childcare</h3>
+      <p class="promise"><b>The promise:</b> free childcare for every New York City child aged 6 weeks to 5 years.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">One week into the term, Gov. Kathy Hochul and Mamdani jointly announced a state-funded path, including free care for 2-year-olds in New York City ("2-Care") starting with about 2,000 seats in high-need neighborhoods in fall 2026, backed by $73 million in first-year state funding within a $1.7 billion statewide expansion. Full universality remains years away, and the state has committed to fund only the program's first two years. <a href="https://www.governor.ny.gov/news/governor-hochul-announces-investments-deliver-universal-child-care-new-york-children-under" target="_blank" rel="noopener">Governor's office &#8599;</a> &middot; <a href="https://nysfocus.com/2026/05/29/new-york-final-state-budget-2026-funding-guide-hochul" target="_blank" rel="noopener">New York Focus &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Albany funding &mdash; and it materialized: the standout case of state cooperation.</p>
+    </div>
+  </div>
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Cost of living</div>
+      <h3>City-owned grocery stores</h3>
+      <p class="promise"><b>The promise:</b> a pilot of five city-owned grocery stores, one per borough, priced at roughly $60 million.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">Two of five sites announced: La Marqueta in East Harlem (April) and The Peninsula in Hunts Point (May). None has opened &mdash; the first store is projected for late 2027 and La Marqueta by 2029. The city has allocated roughly $70 million in capital funds for the five-store program, up from the $60 million campaign estimate, with the first two stores accounting for a reported $40 million. Sites in Brooklyn, Queens and Staten Island are still being scouted. <a href="https://www.nyc.gov/mayors-office/news/2026/04/mayor-mamdani-announces-la-marqueta-as-first-site-identified-for" target="_blank" rel="noopener">Mayor's office &#8599;</a> &middot; <a href="https://www.bxtimes.com/mamdani-city-owned-grocery-store-hunts-point-2027/" target="_blank" rel="noopener">Bronx Times &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City capital dollars and Economic Development Corporation machinery &mdash; both moving.</p>
+    </div>
+  </div>
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Labor</div>
+      <h3>$30 minimum wage by 2030</h3>
+      <p class="promise"><b>The promise:</b> raise New York City's minimum wage to $30 an hour by 2030.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">A City Council bill introduced in March would phase large employers to $30 an hour by 2030 and smaller ones to $29 by 2031, with inflation increases after. It remains in committee &mdash; and the state, which controls the wage floor, has taken no public step toward giving the city that power. <a href="https://gothamist.com/news/nyc-30-minimum-wage-proposal-headed-to-city-council" target="_blank" rel="noopener">Gothamist &#8599;</a> &middot; <a href="https://legistar.council.nyc.gov/LegislationDetail.aspx?ID=7944787&amp;GUID=8A9D75D7-55AE-4F9A-B411-69904826532F" target="_blank" rel="noopener">Int 0757-2026 &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City Council passage plus, almost certainly, Albany authorization. Neither has happened yet.</p>
+    </div>
+  </div>
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Immigration</div>
+      <h3>Shield immigrant New Yorkers</h3>
+      <p class="promise"><b>The promise:</b> "Trump-proof" the city, including $165 million for immigrant legal services.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">A Feb. 6 executive order bars U.S. Immigration and Customs Enforcement from city-run facilities without a judicial warrant and restricts data-sharing with federal immigration authorities; the federal Department of Homeland Security publicly objected. The budget adopted June 30 restores $86.4 million for immigration legal services; no public accounting shows the full $165 million pledge funded. <a href="https://www.cbsnews.com/newyork/news/mamdani-executive-order-abusive-immigration-enforcement/" target="_blank" rel="noopener">CBS New York &#8599;</a> &middot; <a href="https://council.nyc.gov/press/2026/06/30/3151/" target="_blank" rel="noopener">City Council &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Executive action (taken) plus city budget dollars (partly delivered) &mdash; against active federal resistance.</p>
+    </div>
+  </div>
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Housing</div>
+      <h3>200,000 affordable homes</h3>
+      <p class="promise"><b>The promise:</b> build 200,000 publicly subsidized, permanently affordable homes over 10 years, originally financed by roughly $70 billion in new city borrowing.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">The "Block by Block" plan released May 26 keeps the 200,000-new-homes target, adds 200,000 preserved and sets development and preservation goals more ambitious than the Bloomberg or de Blasio housing plans. The financing method changed: with Gov. Kathy Hochul signaling opposition to major new borrowing and Albany providing no new capacity, the plan pairs $22 billion in city capital over five years with state, federal and private financing. A day-one executive order also created the SPEED task force, whose May reform package aims to cut about eight months from affordable-project timelines and up to two years from projects needing rezonings. <a href="https://hellgatenyc.com/mamdani-22-billion-housing-plan-analysis/" target="_blank" rel="noopener">Hell Gate &#8599;</a> &middot; <a href="https://therealdeal.com/new-york/2026/04/22/mamdani-housing-plan-and-pied-a-terre-tax-face-obstacles/" target="_blank" rel="noopener">The Real Deal &#8599;</a> &middot; <a href="https://www.amny.com/news/mamdani-cut-affordable-housing-lottery-delays/" target="_blank" rel="noopener">amNewYork &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City Council capital budgets (first tranche secured) and, over time, state and federal subsidy; the promised homes themselves are a decade-long test.</p>
+    </div>
+  </div>
+
+  <div class="row progress">
+    <div>
+      <div class="cat">Governance</div>
+      <h3>A government that delivers</h3>
+      <p class="promise"><b>The promise:</b> make city government itself work &mdash; "no problem too large for government to solve, and no concern too small for it to care about," with excellence "the expectation across government, not the exception." <a href="https://newyorktheater.me/2025/11/05/new-york-this-power-its-yours-zohran-mamdani-victory-speech-video-and-full-transcript/" target="_blank" rel="noopener">Victory speech &#8599;</a></p>
+    </div>
+    <div class="status-side">
+      <span class="chip progress">In progress</span>
+      <p class="update">Delivery has been treated as its own agenda: a day-one executive order created the SPEED housing-delivery task force, a late-January order required a chief savings officer in every agency and a new Office of Mass Engagement consolidated the city's scattered outreach units. The pothole blitzes became his stated proof of concept &mdash; 100,000 filled by April 6, per the transportation department the most in the first 100 days of a year in over a decade &mdash; "symptomatic of a city government that can actually take care of even the smallest tasks." On May 28 he launched the Commission on Government Efficiency, a charter revision commission chaired by Patrick Gaspard now holding hearings toward November 2026 ballot proposals. <a href="https://abc7ny.com/post/nyc-mayor-mamdani-mandates-chief-saving-officers-every-city-agency-review-performance-eliminate-waste/18501423/" target="_blank" rel="noopener">ABC7 &#8599;</a> &middot; <a href="https://www.cbsnews.com/newyork/news/nyc-mayor-mamdani-commission-on-government-efficiency-coge/" target="_blank" rel="noopener">CBS New York &#8599;</a> &middot; <a href="https://www.aljazeera.com/news/2026/4/10/potholes-and-progress-mamdani-reflects-on-100-days-as-new-yorks-mayor" target="_blank" rel="noopener">Al Jazeera &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Mayoral orders and appointments so far; the efficiency commission's proposals go to voters in November.</p>
+    </div>
+  </div>
+
+  <!-- SCALED BACK -->
+
+  <div class="row scaled">
+    <div>
+      <div class="cat">Public safety</div>
+      <h3>Department of Community Safety</h3>
+      <p class="promise"><b>The promise:</b> a new roughly $1-billion-a-year department to take mental-health crisis calls off the Police Department's plate.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip scaled">Scaled back</span>
+      <p class="update">What launched March 19 by executive order is a mayoral <b>Office</b> of Community Safety &mdash; not a department &mdash; budgeted around $260&ndash;270 million, largely reallocated from existing programs and centered on expanding the B-HEARD mental-health crisis-response teams. Commissioner Tisch has publicly estimated only about 2% of calls for service would shift away from police. <a href="https://www.pbs.org/newshour/politics/nyc-mayor-mamdani-launches-community-safety-office" target="_blank" rel="noopener">PBS NewsHour &#8599;</a> &middot; <a href="https://www.crainsnewyork.com/health-care/cny-mamdani-community-safety-office-budget-20260512/" target="_blank" rel="noopener">Crain's &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City Council funding and likely legislation for a full department &mdash; neither at promised scale.</p>
+    </div>
+  </div>
+
+
+
+  <div class="row scaled">
+    <div>
+      <div class="cat">Housing</div>
+      <h3>Expand CityFHEPS rental vouchers</h3>
+      <p class="promise"><b>The promise:</b> drop the city's appeal in the lawsuit over expanding CityFHEPS rental vouchers on day one and grow the program that moves homeless New Yorkers into housing.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip scaled">Scaled back</span>
+      <p class="update">The administration did not drop the appeal on day one and in February stepped back from expansion, citing the program's cost growth from an initial $25 million to $1.1 billion by fiscal 2025 &mdash; advocates said they felt "betrayed." In June it settled the lawsuit, and the budget deal funded a new voucher expansion: $175 million next year (and $125 million the year after), reaching up to 30,000 more New Yorkers. <a href="https://www.amny.com/news/zohran-mamdani-campaign-cityfheps-program/" target="_blank" rel="noopener">amNewYork &#8599;</a> &middot; <a href="https://gothamist.com/news/mayor-mamdani-and-city-council-strike-budget-deal-that-expands-housing-vouchers" target="_blank" rel="noopener">Gothamist &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City budget dollars &mdash; delivered in part, after a public reversal.</p>
+    </div>
+  </div>
+
+  <div class="row scaled">
+    <div>
+      <div class="cat">Education</div>
+      <h3>Smaller classes, thousands more teachers</h3>
+      <p class="promise"><b>The promise:</b> hire the teachers needed to meet the state's 2022 class-size law &mdash; his February preliminary budget set aside $543 million for roughly 6,000 hires.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip scaled">Scaled back</span>
+      <p class="update">The May executive budget cut the commitment to $122 million for about 1,000 educators &mdash; a nearly 80% reduction &mdash; and Mamdani asked Albany to extend the class-size compliance deadline. Albany granted the delay June 1, pushing full compliance to 2029-30 &mdash; worth roughly $500 million to the city next year and, by one accounting, nearly $3 billion across the financial plan. <a href="https://www.chalkbeat.org/newyork/2026/05/12/nyc-mamdani-executive-budget-class-size-delay-teacher-hiring/" target="_blank" rel="noopener">Chalkbeat &#8599;</a> &middot; <a href="https://www.chalkbeat.org/newyork/2026/06/01/nyc-class-size-law-delay-albany-uft-deal/" target="_blank" rel="noopener">Chalkbeat &#8599;</a></p>
+      <p class="needs"><b>Needed</b> City budget dollars, plus Albany's blessing to slow the mandate &mdash; the walk-back was City Hall's own choice.</p>
+    </div>
+  </div>
+
+  <!-- BLOCKED -->
+
+  <div class="row blocked">
+    <div>
+      <div class="cat">Transit</div>
+      <h3>Fare-free buses</h3>
+      <p class="promise"><b>The promise:</b> make every city bus free &mdash; a cost Mamdani put at $600&ndash;700 million a year (the Metropolitan Transportation Authority chair says closer to $1 billion).</p>
+    </div>
+    <div class="status-side">
+      <span class="chip blocked">Blocked in Albany</span>
+      <p class="update">Mamdani asked Albany in February and conceded by April that free buses would not happen in 2026. The final state budget included neither systemwide free buses nor a pilot. The city moved on adjacent fronts: stalled bus-lane projects were revived in February, a senior advisor for "fast and free buses" was named in late April and half-price Fair Fares expanded to about 340,000 more riders in the June budget. <a href="https://empire.streetsblog.org/mamdani-comes-to-albany" target="_blank" rel="noopener">Streetsblog &#8599;</a> &middot; <a href="https://nysfocus.com/2026/05/29/new-york-final-state-budget-2026-funding-guide-hochul" target="_blank" rel="noopener">New York Focus &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Albany money and MTA cooperation &mdash; neither materialized.</p>
+    </div>
+  </div>
+
+  <div class="row blocked">
+    <div>
+      <div class="cat">Taxes</div>
+      <h3>Tax the rich to pay for it all</h3>
+      <p class="promise"><b>The promise:</b> a 2-percentage-point surtax on incomes over $1 million (roughly $3 billion a year) plus a higher corporate tax rate.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip blocked">Blocked in Albany</span>
+      <p class="update">The Legislature's one-house budgets endorsed corporate tax increases, but Hochul refused both taxes and the final state budget raised neither (it extended the existing top corporate rate rather than letting it lapse). Albany instead delivered a substitute package: a first-ever pied-&agrave;-terre tax on second homes over $5 million (projected at $500 million a year; the city comptroller estimates $340&ndash;380 million) and roughly $8 billion in state assistance over two years. <a href="https://nysfocus.com/2026/05/29/new-york-final-state-budget-2026-funding-guide-hochul" target="_blank" rel="noopener">New York Focus &#8599;</a> &middot; <a href="https://prospect.org/2026/05/12/mamdani-announces-balanced-budget-without-cuts/" target="_blank" rel="noopener">The American Prospect &#8599;</a></p>
+      <p class="needs"><b>Needed</b> The State Legislature (partly on board) and the governor (opposed).</p>
+    </div>
+  </div>
+
+  <!-- NO VISIBLE ACTION -->
+
+  <div class="row none">
+    <div>
+      <div class="cat">Health &amp; family</div>
+      <h3>Baby baskets for new parents</h3>
+      <p class="promise"><b>The promise:</b> a free basket of newborn supplies &mdash; diapers, wipes, postpartum items &mdash; for every family, covering roughly 125,000 births a year at an estimated $19 million.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip none">No visible action</span>
+      <p class="update">Six months of news coverage and mayoral press releases show no implementation steps; the independent Mamdani Tracker, as of its last update in April, lists the promise as not started. <a href="https://www.mamdanitracker.nyc/promises/baby-baskets-all-families-new-york" target="_blank" rel="noopener">Mamdani Tracker &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Only city action &mdash; a health department program and a modest budget line.</p>
+    </div>
+  </div>
+
+  <div class="row none">
+    <div>
+      <div class="cat">Public safety</div>
+      <h3>Disband the NYPD Strategic Response Group</h3>
+      <p class="promise"><b>The promise:</b> dissolve the Police Department's protest-response unit, long criticized over its handling of demonstrations.</p>
+    </div>
+    <div class="status-side">
+      <span class="chip none">No visible action</span>
+      <p class="update">By March, reporting found the administration "still discussing" how to disband the unit and Mamdani tempering his rhetoric; no disbandment had been announced as of July 1, and the unit remained funded in the executive budget. In April he also stepped back from a related pledge to eliminate the department's gang database, signaling openness to a reformed version. <a href="https://gothamist.com/news/mamdanis-public-safety-promises-are-slow-going-his-allies-say-thats-the-point" target="_blank" rel="noopener">Gothamist &#8599;</a> &middot; <a href="https://gothamist.com/news/mayor-mamdani-signals-openness-to-nypd-gang-database-citing-reforms" target="_blank" rel="noopener">Gothamist &#8599;</a></p>
+      <p class="needs"><b>Needed</b> Mayoral and commissioner action alone.</p>
+    </div>
+  </div>
+
+  <div class="section-head">Beyond the platform
+    <span class="sub">Major first-half moves that were not campaign promises.</span>
+  </div>
+
+  <div class="beyond">
+    <div class="item">
+      <div class="when">June 30</div>
+      <h4>A first budget deal, on time</h4>
+      <p>The city is required by law to balance its budget; the choices within it are the story. The $125.8 billion deal passed the City Council 45&ndash;6, closing a projected $5.4 billion gap without major service cuts while expanding vouchers, Fair Fares and childcare and holding police headcount flat at about 35,000. Fiscal monitors note it leans on roughly $8 billion in one-time resources, with a gap of more than $7 billion already projected for next year. <a href="https://www.amny.com/politics/nyc-budget-deal-mamdani-menin-06302026/" target="_blank" rel="noopener">amNewYork &#8599;</a> &middot; <a href="https://www.thecityreporter.nyc/2026/06/30/mamdani-budget-one-shots-deficit/" target="_blank" rel="noopener">The City Reporter &#8599;</a></p>
+    </div>
+    <div class="item">
+      <div class="when">May</div>
+      <h4>An $8 billion state-aid haul</h4>
+      <p>What Albany refused in taxes it partly replaced in aid: roughly $8 billion in state assistance over two fiscal years, announced jointly with the governor, alongside the new pied-&agrave;-terre tax. <a href="https://prospect.org/2026/05/12/mamdani-announces-balanced-budget-without-cuts/" target="_blank" rel="noopener">The American Prospect &#8599;</a> &middot; <a href="https://www.nbcnewyork.com/new-york/mamdani-higher-taxes-hochul-interview-budget/6452212/" target="_blank" rel="noopener">NBC New York &#8599;</a></p>
+    </div>
+    <div class="item">
+      <div class="when">Jan&ndash;Feb</div>
+      <h4>Homelessness policy, tested fast</h4>
+      <p>Paused encampment sweeps on Jan. 5, then reinstated them Feb. 18 after a deadly cold snap &mdash; shifting the lead role from police to the Department of Homeless Services, with one-week notice periods. <a href="https://www.amny.com/politics/mamdani-homeless-encampment-sweeps-restart/" target="_blank" rel="noopener">amNewYork &#8599;</a> &middot; <a href="https://fortune.com/2026/02/19/mamdani-homeless-encampments-clearout-cold-exposure/" target="_blank" rel="noopener">Fortune &#8599;</a></p>
+    </div>
+    <div class="item">
+      <div class="when">April 24</div>
+      <h4>A deed-theft prevention office</h4>
+      <p>Created the Mayor's Office of Deed Theft Prevention to combat home-title fraud, an issue concentrated in majority-Black and Hispanic homeowner neighborhoods. <a href="https://www.nyc.gov/mayors-office/news/2026/04/mayor-mamdani-establishes-mayor-s-office-of-deed-theft-preventio" target="_blank" rel="noopener">Mayor's office &#8599;</a> &middot; <a href="https://www.amny.com/news/mamdani-deed-theft-office-pauses-tax-lien-sales/" target="_blank" rel="noopener">amNewYork &#8599;</a></p>
+    </div>
+    <div class="item">
+      <div class="when">June 26</div>
+      <h4>$15 million for gender-affirming care</h4>
+      <p>Announced a $15 million investment in gender-affirming care access &mdash; a provider fund, a hotline and research, with an adult hormone-therapy pilot in Queens &mdash; as federal restrictions tightened. <a href="https://www.nyc.gov/mayors-office/news/2026/06/standing-up-for-trans-new-yorkers--mayor-mamdani-launches--15-mi" target="_blank" rel="noopener">Mayor's office &#8599;</a> &middot; <a href="https://gothamist.com/news/nyc-to-spend-15m-for-trio-of-new-gender-affirming-care-youth-projects" target="_blank" rel="noopener">Gothamist &#8599;</a></p>
+    </div>
+  </div>
+
+  <div class="source">
+    <b>Sources</b> Compiled from news coverage and official press releases, January&ndash;June 2026, linked on each entry: Gothamist, THE CITY, New York Focus, PBS NewsHour, Hell Gate, Streetsblog, Time, ABC7, CBS New York, The American Prospect, The Real Deal, NYCEDC and the governor's office, cross-checked against the independent <a href="https://www.mamdanitracker.nyc/promises" target="_blank" rel="noopener">Mamdani Tracker</a>.
+    <details>
+      <summary>How we did this</summary>
+      <p>The promise list reflects the twelve most prominent commitments of the 2025 Mamdani campaign, as documented in campaign materials and contemporaneous coverage. Status labels are ours: "delivered" means the specific promised outcome occurred; "in progress" means concrete, funded steps exist but the promise is unfinished; "scaled back" means the administration is pursuing a materially smaller version; "blocked in Albany" means the state refused required money or authority; "no visible action" means we found no implementation steps in six months of news coverage and mayoral press releases &mdash; absence of coverage, not proof of inaction. Every status claim links to at least one named source. Dollar figures are as reported by the linked outlets; where estimates conflict (bus costs, pied-&agrave;-terre revenue), we show the range. Data as of July 1, 2026.</p>
+    </details>
+  </div>
+
+  <div class="foot">
+    <span>Data as of July 1, 2026</span>
+  </div>
+
+</div>
+
+<script>
+// Embed mode: ?embed=1 strips the card border and body padding so this page
+// can sit cleanly inside a Ghost HTML card without doubled borders.
+const isEmbed = new URLSearchParams(location.search).get('embed') === '1';
+if (isEmbed) document.body.classList.add('embed');
+
+// Post height to parent (Ghost embed sizing). Keep iframe tight to content.
+if (isEmbed) {
+  let lastPosted = 0;
+  const postHeight = () => {
+    const card = document.querySelector('.card');
+    const h = Math.ceil(Math.max(
+      card ? card.getBoundingClientRect().height : 0,
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight
+    ));
+    if (h && h !== lastPosted) {
+      lastPosted = h;
+      parent.postMessage({ type: 'vc-embed-height', id: 'mamdani-six-months', height: h }, '*');
+    }
+  };
+  window.addEventListener('load', postHeight);
+  window.addEventListener('resize', postHeight);
+  document.fonts && document.fonts.ready && document.fonts.ready.then(postHeight);
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(postHeight);
+    ro.observe(document.body);
+    const card = document.querySelector('.card');
+    if (card) ro.observe(card);
+  }
+  let n = 0;
+  const t = setInterval(() => { postHeight(); if (++n > 30) clearInterval(t); }, 250);
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!-- Mamdani six months promise ledger — Vital City embed
+     Paste this whole block into a Ghost HTML card.
+     Replace GITHUB_PAGES_BASE with the live URL once deployed,
+     e.g. https://vitalcity-nyc.github.io/mamdani-six-months -->
+<div class="vc-embed-mamdani-six-months" style="margin:1.5em 0;">
+  <div class="vc-embed-mamdani-six-months__frame" style="position:relative;width:100%;border:1px solid #111;overflow:hidden;">
+    <iframe
+      class="vc-embed-mamdani-six-months__iframe"
+      src="GITHUB_PAGES_BASE/?embed=1"
+      title="Mamdani's first six months: the promise ledger"
+      loading="lazy"
+      allow="fullscreen"
+      scrolling="no"
+      style="display:block;width:100%;height:4000px;border:0;background:transparent;"
+    ></iframe>
+  </div>
+  <p style="font-size:0.8em;color:#666;margin:0.5em 0 0;text-align:center;">
+    <a href="GITHUB_PAGES_BASE/" target="_blank" rel="noopener">Open full screen &#8599;</a>
+  </p>
+
+  <script>
+    (function () {
+      window.addEventListener('message', function (e) {
+        var d = e && e.data;
+        if (!d || d.type !== 'vc-embed-height' || d.id !== 'mamdani-six-months') return;
+        var f = document.querySelector('.vc-embed-mamdani-six-months__iframe');
+        if (f && typeof d.height === 'number') f.style.height = d.height + 'px';
+      });
+    })();
+  </script>
+</div>

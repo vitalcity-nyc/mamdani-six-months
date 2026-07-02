@@ -35,6 +35,15 @@
 - **The NYPD inspector general** point was removed from the SRG row rather than reworded: the post is filled by the Department of Investigation commissioner, not the mayor, and the vacancy predates the administration — keeping it risked implying a mayoral failure to appoint.
 - Several nyc.gov pages block automated fetches (403); where that happened, claims rest on the release title/date plus two or more independent news accounts.
 
+## Second verification pass (post-publication)
+
+A second, fully independent three-agent audit re-checked every published claim against primary sources. Result: **no factual errors found** — all fifteen promise rows and five beyond-platform items verified, with the two load-bearing negatives (no fare-free bus pilot in the enacted state budget; no Strategic Response Group disbandment as of July 1) surviving targeted refutation attempts, and the previously-corrected grocery figure ($70M program-wide / $40M first two stores) confirmed correct. Two small refinements applied:
+
+- **Grocery opening date** softened from "late 2027" to "2027" — sources state 2027 without the "late" specificity.
+- **Budget one-shots** reworded from "roughly $8 billion in one-time resources" to name the mechanisms (reserves, pension-payment stretch, delayed costs), so it no longer collides with the separate ~$8 billion state-aid figure in the adjacent card. (The $8B one-shots figure is defensible per the Citizens Budget Commission's ~$7.8B count; the comptroller's narrower one-time figure is ~$6 billion.)
+
+Both source URLs the second pass flagged as possibly dead (the victory-speech transcript and the gender-affirming-care Gothamist article) were confirmed to be the correct live URLs in the published page — the agent had tested guessed alternative slugs.
+
 ## Link integrity
 
 Every cited URL in the graphic was checked for existence and support of its anchoring sentence. Two citation mismatches were fixed (the pre-vote Gothamist article on the 45–6 tally; PBS not containing the dollar figures). All links now support their claims.

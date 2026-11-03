@@ -54,4 +54,4 @@ The scoreboard strip (2 / 6 / 3 / 2 / 2) is a simple count of the fifteen promis
 
 ## Reproducibility
 
-A competent researcher with the linked sources can reconstruct every entry. There is no data pipeline: the graphic is hand-assembled static HTML; every claim carries its source link inline. A claim-by-claim audit report (`FACT-CHECK.md`) will be added when the halted fact-check pass is completed. **Do not publish before that pass is done.**
+A competent researcher with the linked sources can reconstruct every entry. There is no data pipeline: the graphic is hand-assembled static HTML; every claim carries its source link inline. The claim-by-claim audit report is in `FACT-CHECK.md`.
